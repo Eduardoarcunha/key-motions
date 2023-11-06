@@ -7,6 +7,8 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from matplotlib import pyplot as plt
 import time
+from pynput import keyboard
+
 
 # Model Path
 model_path = 'gesture_recognizer.task'
@@ -16,13 +18,13 @@ FPS = 15
 WIN = 'Gesture Recognition Example'
 TIME_RECOGNITION = .5
 
-GESTURES = ["Closed_Fist", "Victory", "Thumbs_Up", "Thumbs_Down", "Open_Palm", "ILoveYou", "Pointing_Up"]
+GESTURES = ["Closed_Fist", "Victory", "Thumb_Up", "Thumb_Down", "Open_Palm", "ILoveYou", "Pointing_Up"]
 
 GESTURES_MAPPED = {
     "Closed_Fist": "a",
     "Victory": "b",
-    "Thumbs_Up": "c",
-    "Thumbs_Down": "d",
+    "Thumb_Up": "c",
+    "Thumb_Down": "d",
     "Open_Palm": "e",
     "ILoveYou": "f",
     "Pointing_Up": "g"
@@ -42,6 +44,8 @@ recognizer = vision.GestureRecognizer.create_from_options(options)
 current_gesture = None
 gesture_start_time = None
 
+controller = keyboard.Controller()
+
 def process(frame):
     global current_gesture, gesture_start_time  # Access the global variables
     
@@ -59,9 +63,13 @@ def process(frame):
         if current_gesture != top_gesture[0].category_name:
             current_gesture = top_gesture[0].category_name
             gesture_start_time = time.time()
-        elif time.time() - gesture_start_time >= TIME_RECOGNITION:  # If the gesture has remained the same for 3 seconds
+        elif time.time() - gesture_start_time >= TIME_RECOGNITION and current_gesture != "None":  # If the gesture has remained the same for 3 seconds
             print(f"Gesture '{current_gesture}' has remained the same for {TIME_RECOGNITION} seconds!")
             gesture_start_time = time.time()  # Reset the start time to avoid repeated prints
+            
+            print(f'Pressed: {GESTURES_MAPPED[current_gesture]}')
+            controller.press(GESTURES_MAPPED[current_gesture])
+            controller.release(GESTURES_MAPPED[current_gesture])
 
     else:
         current_gesture = None
