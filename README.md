@@ -14,3 +14,10 @@ Install requirements:
 
 `pip install --upgrade -r requirements.txt`
 
+### Benchmarks
+
+
+https://www.codespeedy.com/keyboard-input-using-gestures-in-python-deep-learning/
+
+https://github.com/nickgillian/grt
+
