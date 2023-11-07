@@ -1,17 +1,9 @@
-import cv2 as cv
-import numpy as np
-import sys
 import mediapipe as mp
 from mediapipe.framework.formats import landmark_pb2
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
-from matplotlib import pyplot as plt
+import cv2
 import time
 from pynput import keyboard
 
-
-# Model Path
-model_path = 'gesture_recognizer.task'
 
 CAM = 0
 FPS = 100
@@ -22,36 +14,44 @@ GESTURES = ["Closed_Fist", "Victory", "Thumb_Up", "Thumb_Down", "Open_Palm", "IL
 
 GESTURES_MAPPED = {
     "Closed_Fist": "a",
-    "Victory": "b",
-    "Thumb_Up": "c",
-    "Thumb_Down": "d",
-    "Open_Palm": "e",
-    "ILoveYou": "f",
+    "Victory": keyboard.Key.left,
+    "Thumb_Up": keyboard.Key.up,
+    "Thumb_Down": keyboard.Key.down,
+    "Open_Palm": keyboard.Key.right,
+    "ILoveYou": "z",
     "Pointing_Up": "g"
 }
 
-mp_hands = mp.solutions.hands
-mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
-VisionRunningMode = mp.tasks.vision.RunningMode
-
-# Load the model
-base_options = python.BaseOptions(model_asset_path=model_path)
-options = vision.GestureRecognizerOptions(base_options=base_options, num_hands=2, running_mode=VisionRunningMode.LIVE_STREAM)
-recognizer = vision.GestureRecognizer.create_from_options(options)
-
-# Variables to keep track of the current gesture and its start time
 current_gesture = None
 gesture_start_time = None
 
 controller = keyboard.Controller()
 
+results = None
+
+BaseOptions = mp.tasks.BaseOptions
+GestureRecognizer = mp.tasks.vision.GestureRecognizer
+GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
+GestureRecognizerResult = mp.tasks.vision.GestureRecognizerResult
+VisionRunningMode = mp.tasks.vision.RunningMode
+
+mp_hands = mp.solutions.hands
+mp_drawing = mp.solutions.drawing_utils
+mp_drawing_styles = mp.solutions.drawing_styles
+
+
+video = cv2.VideoCapture(CAM)
+
 def process(frame):
     global current_gesture, gesture_start_time  # Access the global variables
     
     output = frame.copy()
-    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=output)
-    recognition_result = recognizer.recognize(mp_image)
+    # mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=output)
+    # recognition_result = recognizer.recognize(mp_image)
+    
+    global results
+    recognition_result = results
+
     annotated_image = visualize(output, recognition_result)
 
     # Check if gestures are detected
@@ -69,7 +69,8 @@ def process(frame):
             
             print(f'Pressed: {GESTURES_MAPPED[current_gesture]}')
             controller.press(GESTURES_MAPPED[current_gesture])
-            controller.release(GESTURES_MAPPED[current_gesture])
+            # time.sleep(1)
+            # controller.release(GESTURES_MAPPED[current_gesture])
 
     else:
         current_gesture = None
@@ -84,10 +85,10 @@ def visualize(image, recognition_result):
         y_position = 30  # Starting vertical position for the text
         for gesture in recognition_result.gestures:
             title = f"{gesture[0].category_name} ({gesture[0].score:.2f})"
-            cv.putText(image, title, (10, y_position), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+            cv2.putText(image, title, (10, y_position), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
             y_position += 40  # Increase vertical position for next gesture
     else:
-        cv.putText(image, "No gesture detected", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+        cv2.putText(image, "No gesture detected", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
     
     for hand_landmarks in recognition_result.hand_landmarks:
         hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
@@ -101,21 +102,49 @@ def visualize(image, recognition_result):
 
     return image
 
+# Create a image segmenter instance with the live stream mode:
+def print_result(result: GestureRecognizerResult, output_image: mp.Image, timestamp_ms: int):
+    # cv2.imshow('Show', output_image.numpy_view())
+    # imright = output_image.numpy_view()
 
-def main():
-    capture = cv.VideoCapture(CAM)
-    delay = round(1000 / FPS)
-    while True:
-        success, frame = capture.read()
+    # print(result.gestures)
+    global results
+    results = result
+    # cv2.imwrite('somefile.jpg', imright)
 
-        if success:
-            annotated_frame = process(frame)
-            cv.imshow(WIN, annotated_frame)
 
-        if cv.waitKey(delay) == ord('q'):
+options = GestureRecognizerOptions(
+    base_options=BaseOptions(model_asset_path='gesture_recognizer.task'),
+    num_hands=2,
+    running_mode=VisionRunningMode.LIVE_STREAM,
+    result_callback=print_result)
+
+timestamp = 0
+with GestureRecognizer.create_from_options(options) as recognizer:
+  # The recognizer is initialized. Use it here.
+    while video.isOpened(): 
+        # Capture frame-by-frame
+        ret, frame = video.read()
+
+        if not ret:
+            print("Ignoring empty frame")
             break
 
-    cv.destroyAllWindows()
+        timestamp += 1
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
+        # Send live image data to perform gesture recognition
+        # The results are accessible via the `result_callback` provided in
+        # the `GestureRecognizerOptions` object.
+        # The gesture recognizer must be created with the live stream mode.
+        recognizer.recognize_async(mp_image, timestamp)
+        # if results: print(results.gestures)
+        if results:
+            frame = process(frame)
+        cv2.imshow('Show', frame)
 
-if __name__ == '__main__':
-    main()
+        # delay = round(1000 / FPS)
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+video.release()
+cv2.destroyAllWindows()
