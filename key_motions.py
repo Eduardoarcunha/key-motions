@@ -2,21 +2,14 @@ from typing import List, TypedDict, Literal, Union
 from pynput.keyboard import Key
 import cv2
 from gesture_recognition import GestureRecognition
-from controller import Controller
+from controller import Controller, KeyInput
 import mediapipe as mp
 import time
 
 
-alphabet = Literal[
-    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
-    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-    "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
-]
-
 class Motion(TypedDict):
     name: Literal["✊", "👍", "👎", "✋", "✌️", "🤟", "☝️"]
-    value: Union[alphabet, Key]
+    value: KeyInput
 
 class KeyMotions:
     def __init__(self):
