@@ -1,8 +1,11 @@
 from typing import List, TypedDict, Literal, Union
 from pynput.keyboard import Key
-import string
 import cv2
-from gesture_recognition import *
+from gesture_recognition import GestureRecognition
+from controller import Controller
+import mediapipe as mp
+import time
+
 
 alphabet = Literal[
     "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
@@ -39,22 +42,21 @@ class KeyMotions:
 
         self.recognition_results = None
         self.video = None
-        self.gesture_recognizer = GestureRecognition()
-    
-    CAM = 0
-    FPS = 100
-    WIN = 'Gesture Recognition Example'
-    TIME_RECOGNITION = .5
+
+        self.cam = 0
+        self.FPS = 100
+        self.time_recognition = .5
+
+        self.current_gesture = None
+        self.gesture_start_time = None
 
     
     def run(self):
-        # De acordo com a taxa de escrita definida pelo usuário
-        # Pega leitura do GestureRecognition
-        # Escreve valor no teclado de acordo com as moitions definidas
-        
-        self.video = cv2.VideoCapture(self.CAM)
+        gesture_recognizer = GestureRecognition(self.cam, self.motion_key_dict)
+        controller = Controller()
+        self.video = cv2.VideoCapture(self.cam)
         timestamp = 0
-        with self.gesture_recognizer.GestureRecognizer.create_from_options(self.gesture_recognizer.options) as recognizer:
+        with gesture_recognizer.GestureRecognizer.create_from_options(gesture_recognizer.options) as recognizer:
             while self.video.isOpened():
                 ret, frame = self.video.read()
 
@@ -66,8 +68,28 @@ class KeyMotions:
                 mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
                 recognizer.recognize_async(mp_image, timestamp)
 
-                if self.gesture_recognizer.results:
-                    frame = self.gesture_recognizer.process(frame)
+                if gesture_recognizer.has_recognized():
+                    frame, recognition_result = gesture_recognizer.process(frame)
+
+                    if recognition_result and recognition_result.gestures:
+                        top_gesture = max(recognition_result.gestures, key=lambda x: x[0].score)
+                        if self.current_gesture != top_gesture[0].category_name:
+                            if self.current_gesture is not None:
+                                controller.release_key()
+
+                            self.current_gesture = top_gesture[0].category_name
+                            self.gesture_start_time = time.time()
+
+                        elif self.gesture_start_time and time.time() - self.gesture_start_time >= self.time_recognition and self.current_gesture != "None":
+                            if not controller.is_pressing_key() and self.current_gesture is not None:
+                                print(f"Gesture '{self.current_gesture}' has been maintained for {self.time_recognition} seconds!")
+                                gesture_key = self.motion_key_dict[self.current_gesture]
+                                controller.press_key(gesture_key)
+                    else:
+                        controller.release_key()
+                        self.current_gesture = None
+                        self.gesture_start_time = None
+                        
                 cv2.imshow('Show', frame)
 
                 if cv2.waitKey(1) == ord('q'):
