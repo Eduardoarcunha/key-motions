@@ -5,6 +5,7 @@ from pynput.keyboard import Key
 import mediapipe as mp
 import time
 import cv2
+import json
 
 
 class HoldMotion(TypedDict):
@@ -16,21 +17,24 @@ class PressMotion(TypedDict):
     duration: float
 
 
+MotionType = Union[HoldMotion, PressMotion]
+
+
 class Motion(TypedDict):
     name: Literal["✊", "👍", "👎", "✋", "✌️", "🤟", "☝️"]
     value: KeyInput
-    motion_type: Union[HoldMotion, PressMotion]
+    motion_type: MotionType
     time_to_press: float
 
 
 class KeyMotionDict(TypedDict):
     value: KeyInput
-    motion_type: Union[HoldMotion, PressMotion]
+    motion_type: MotionType
     time_to_press: float
 
 
 class KeyMotions:
-    def __init__(self):
+    def __init__(self, cam: int = 0, fps: int = 30):
         self.emote_motion_dict = {
             "👍": "Thumb_Up",
             "👎": "Thumb_Down",
@@ -44,8 +48,8 @@ class KeyMotions:
         self.motion_key_dict: Dict[str, KeyMotionDict] = {
             "Thumb_Up": {
                 "value": Key.up,
-                "motion_type": PressMotion(name="press", duration=2),
-                "time_to_press": 5,
+                "motion_type": HoldMotion(name="hold"),
+                "time_to_press": 0.5,
             },
             "Thumb_Down": {
                 "value": Key.down,
@@ -64,27 +68,25 @@ class KeyMotions:
             },
             "Victory": {
                 "value": "z",
-                "motion_type": HoldMotion(name="hold"),
+                "motion_type": PressMotion(name="press", duration=0.5),
                 "time_to_press": 0.5,
             },
             "ILoveYou": {
                 "value": "x",
-                "motion_type": HoldMotion(name="hold"),
+                "motion_type": PressMotion(name="press", duration=0.5),
                 "time_to_press": 0.5,
             },
             "Pointing_Up": {
                 "value": "a",
-                "motion_type": HoldMotion(name="hold"),
+                "motion_type": PressMotion(name="press", duration=0.5),
                 "time_to_press": 0.5,
             },
         }
 
-        self.recognition_results = None
         self.video = None
 
-        self.cam = 0
-        self.FPS = 100
-        self.time_recognition = 0.5
+        self.cam = cam
+        self.FPS = fps
 
         self.current_gesture = None
         self.gesture_start_time = None
@@ -182,29 +184,13 @@ class KeyMotions:
                 "motion_type": motion["motion_type"],
                 "time_to_press": motion["time_to_press"],
             }
+
         return self
 
+    def set_motions_from_json(self, motions_json):
+        json_file = open(motions_json, encoding="utf-8")
+        motions = json.load(json_file)
+        json_file.close()
+        self.set_motions(motions)
 
-motions_list: List[Motion] = [
-    {
-        "name": "👍",
-        "value": "a",
-        "motion_type": HoldMotion(name="hold"),
-        "time_to_press": 0.5,
-    }
-]
-
-motions_list2: List[Motion] = [
-    {
-        "name": "✊",
-        "value": "d",
-        "motion_type": PressMotion(name="press", duration=1),
-        "time_to_press": 0.5,
-    },
-]
-
-# key_motions = KeyMotions().set_motions(motions_list).set_motions(motions_list2)
-# print(key_motions.motion_key_dict)
-
-k = KeyMotions()
-k.run()
+        return self
