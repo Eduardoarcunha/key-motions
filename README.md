@@ -18,11 +18,20 @@ Windows:
 
 Linux:
 
+`sudo apt update`
+
+`sudo apt upgrade -y`
+
+`sudo apt install python3 python3-pip`
+
 `source .env/bin/activate`
 
 ### Install requirements:
 
 `pip install --upgrade -r requirements.txt`
+
+`pip3 install --upgrade -r requirements.txt`
+
 
 ## Getting started
 
