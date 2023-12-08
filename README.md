@@ -14,7 +14,17 @@ Key motions is a python library that allows you to control your keyboard with ge
 
 Windows:
 
-`.env/Scripts/activate.bat`
+`.env\Scripts\activate.bat`
+
+Linux:
+
+`source .env/bin/activate`
+
+### Install requirements:
+
+Windows:
+
+`pip install --upgrade -r requirements_win.txt`
 
 Linux:
 
@@ -24,13 +34,7 @@ Linux:
 
 `sudo apt install python3 python3-pip`
 
-`source .env/bin/activate`
-
-### Install requirements:
-
-`pip install --upgrade -r requirements.txt`
-
-`pip3 install --upgrade -r requirements.txt`
+`pip3 install --upgrade -r requirements_lin.txt`
 
 
 ## Getting started
@@ -108,7 +112,9 @@ If you don't want to define to use the lib though code, you can run the `demo.py
 
 You can use KeyMotions lib to a various numbers of applications, as it is easy to integrate with any python project! For example, you can use it as the controller of your pokemon game:
 
-    TODO Adicionar vídeo jogando pokemon
+![controller_gif](gif/Controls1.gif)
+
+![battle_gif](gif/Fight1.gif)
 
 ## API
 
