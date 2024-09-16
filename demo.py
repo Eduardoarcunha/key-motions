@@ -1,5 +1,9 @@
-import key_motions as km
+"""
+Overview: This is a demo code for using the key-motions library.
+"""
+
 import sys
+import key_motions as km
 
 json_file = sys.argv[1]
 
