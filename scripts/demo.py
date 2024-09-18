@@ -3,7 +3,7 @@ Overview: This is a demo code for using the key-motions library.
 """
 
 import sys
-import key_motions as km
+import keymotions as km
 
 json_file = sys.argv[1]
 
