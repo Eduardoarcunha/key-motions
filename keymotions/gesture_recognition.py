@@ -1,7 +1,11 @@
+from typing import Tuple
+import os
+import pkg_resources
+
+
+import cv2
 import mediapipe as mp
 from mediapipe.framework.formats import landmark_pb2
-import cv2
-from typing import Tuple
 
 
 class GestureRecognition:
@@ -23,8 +27,12 @@ class GestureRecognition:
         """Initializes the GestureRecognition class, initializing the video capture and the gesture recognizer"""
         self.results = None
 
+        task_file_path = pkg_resources.resource_filename(
+            __name__, "gesture_recognizer.task"
+        )
+
         self.options = self.GestureRecognizerOptions(
-            base_options=self.BaseOptions(model_asset_path="gesture_recognizer.task"),
+            base_options=self.BaseOptions(model_asset_path=task_file_path),
             num_hands=2,
             running_mode=self.VisionRunningMode.LIVE_STREAM,
             result_callback=self.define_result,

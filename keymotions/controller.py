@@ -1,6 +1,7 @@
+from typing import Literal, Union, Optional
+
 from pynput import keyboard
 from pynput.keyboard import Key
-from typing import Literal, Union, Optional
 
 alphabet = Literal[
     "a",

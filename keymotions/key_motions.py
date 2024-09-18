@@ -1,11 +1,13 @@
+import time
+import json
 from typing import List, TypedDict, Literal, Union, Optional, Dict
-from gesture_recognition import GestureRecognition
-from controller import Controller, KeyInput
+
+import cv2
 from pynput.keyboard import Key
 import mediapipe as mp
-import time
-import cv2
-import json
+
+from .gesture_recognition import GestureRecognition
+from .controller import Controller, KeyInput
 
 
 class HoldMotion(TypedDict):
