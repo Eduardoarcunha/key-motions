@@ -2,7 +2,7 @@
 
 ## About
 
-Key motions is a python library that allows you to control your keyboard with gestures, using your webcam. To do so, it uses the [mediapipe](https://developers.google.com/mediapipe) library to detect hand landmarks and pynput [https://pynput.readthedocs.io/en/latest/#] to control the keyboard.
+Key motions is a python library that allows you to control your keyboard with gestures, using your webcam. To do so, it uses the [mediapipe](https://developers.google.com/mediapipe) library to detect hand landmarks and [pynput](https://pynput.readthedocs.io/en/latest/#) to control the keyboard.
 
 ## Install the project
 
