@@ -1,5 +1,6 @@
 from pynput.keyboard import Key
-from key_motions import KeyMotions, HoldMotion, PressMotion
+from keymotions import KeyMotions
+from keymotions.key_motions import HoldMotion, PressMotion
 
 def test_set_motions():
     key_motions = KeyMotions()
